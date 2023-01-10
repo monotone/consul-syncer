@@ -1,3 +1,8 @@
+# fork 变更说明：
+
+## 因为consul的txn事务限制了最多一次 128 个操作，因此当超过 128 个 kv 同步时，简单的修改成一个一个同步。
+
+
 # consul-syncer
 
 Consul-Syncer syncs services, kvs and events from one consul instance to another one.
