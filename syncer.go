@@ -114,11 +114,11 @@ func (s *Syncer) syncService(entries []*consulapi.ServiceEntry) error {
 	s.logger.Info(fmt.Sprintf("register %d services", len(entries)))
 	for _, entry := range entries {
 		optsDe := &consulapi.CatalogDeregistration{
-			Node:       entry.Node.Node,
-			Address:    entry.Node.Address,
-			Datacenter: entry.Node.Datacenter,
-			ServiceID:  entry.Service.ID,
-			Namespace:  entry.Service.Namespace,
+			Node:    entry.Node.Node,
+			Address: entry.Node.Address,
+			// Datacenter: entry.Node.Datacenter,
+			ServiceID: entry.Service.ID,
+			Namespace: entry.Service.Namespace,
 		}
 		s.logger.Debug("catalog deregister", optsDe)
 		if _, err := catalog.Deregister(optsDe, &s.cfg.WriteOptions); err != nil {
@@ -129,9 +129,9 @@ func (s *Syncer) syncService(entries []*consulapi.ServiceEntry) error {
 			Address:         entry.Node.Address,
 			TaggedAddresses: entry.Node.TaggedAddresses,
 			NodeMeta:        s.appendExternalNodeMeta(entry.Node.Meta),
-			Datacenter:      entry.Node.Datacenter,
-			Service:         entry.Service,
-			SkipNodeUpdate:  false,
+			// Datacenter:      entry.Node.Datacenter,
+			Service:        entry.Service,
+			SkipNodeUpdate: false,
 		}
 		if s.cfg.Check {
 			opts.Checks = entry.Checks
