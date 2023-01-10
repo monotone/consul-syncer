@@ -225,11 +225,25 @@ func (s *Syncer) cleanImportedServices() error {
 	return nil
 }
 
+func (s *Syncer) syncKVsOneByOne(pairs []*consulapi.KVPair) error {
+	for _, pair := range pairs {
+		s.logger.Info(fmt.Sprintf("put kvs one by one for key %s", pair.Key))
+		kv := s.cTarget.KV()
+		_, err := kv.Put(pair, &s.cfg.WriteOptions)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *Syncer) syncKVs(pairs []*consulapi.KVPair) error {
 	if len(pairs) == 1 {
 		kv := s.cTarget.KV()
 		_, err := kv.Put(pairs[0], &s.cfg.WriteOptions)
 		return err
+	} else if len(pairs) > 128 {
+		return s.syncKVsOneByOne(pairs)
 	}
 	s.logger.Info(fmt.Sprintf("put %d kvs", len(pairs)))
 	txn := s.cTarget.Txn()
@@ -250,10 +264,12 @@ func (s *Syncer) syncKVs(pairs []*consulapi.KVPair) error {
 	ok, resp, _, err := txn.Txn(opts, &s.cfg.QueryOptions)
 	if err != nil {
 		var sb strings.Builder
-		for _, e := range resp.Errors {
-			sb.WriteString(strconv.Itoa(e.OpIndex))
-			sb.WriteRune(':')
-			sb.WriteString(e.What)
+		if resp != nil {
+			for _, e := range resp.Errors {
+				sb.WriteString(strconv.Itoa(e.OpIndex))
+				sb.WriteRune(':')
+				sb.WriteString(e.What)
+			}
 		}
 		return fmt.Errorf("%w: %s", err, sb.String())
 	}
